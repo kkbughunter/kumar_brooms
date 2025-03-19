@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "301149542259",
+    "project_id": "kumar-brooms-main",
+    "storage_bucket": "kumar-brooms-main.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301149542259:android:fdc12ea84e8cfb8c1f9706",
+        "android_client_info": {
+          "package_name": "com.example.kumar_brooms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcUk3jRFrMZpAFYoWP8zNFTPtxyK-SVYY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

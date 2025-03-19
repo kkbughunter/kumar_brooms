@@ -1,0 +1,9 @@
+```
+(default) -> (document) -> (field)
+users -> u1  -> "name": "John"
+             -> "address": "Chennai"
+             -> "phone1": "1345678"
+             -> "phone2": "1234567890"
+             -> "role": "customer"
+             -> "shop_name": "John's Store"
+```
