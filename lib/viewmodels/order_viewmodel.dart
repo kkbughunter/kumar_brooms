@@ -293,4 +293,24 @@ class OrderViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> fetchAllOrders() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await fetchTrackingOrders();
+      await fetchWorkOrders();
+      await fetchDeliveryOrders();
+      await fetchPaymentOrders();
+      await fetchHistoryOrders();
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Failed to fetch all orders: $e';
+      notifyListeners();
+    }
+  }
 }
