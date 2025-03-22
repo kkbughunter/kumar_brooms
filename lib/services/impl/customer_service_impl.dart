@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kumar_brooms/model/customer.dart';
+import 'package:kumar_brooms/models/customer.dart';
 import 'package:kumar_brooms/services/customer_service.dart';
 
 class CustomerServiceImpl implements CustomerService {

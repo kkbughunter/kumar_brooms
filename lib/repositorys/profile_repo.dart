@@ -1,5 +1,5 @@
 
-import 'package:kumar_brooms/model/user.dart';
+import 'package:kumar_brooms/models/user.dart';
 
 abstract class ProfileRepository {
   Future<User?> getUserProfile(String userId);

@@ -1,6 +1,6 @@
 // lib/services/impl/user_service_impl.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kumar_brooms/model/UserPermission.dart';
+import 'package:kumar_brooms/models/UserPermission.dart';
 import 'package:kumar_brooms/services/user_service.dart';
 
 class UserServiceImpl implements UserService {

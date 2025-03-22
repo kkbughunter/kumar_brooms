@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kumar_brooms/model/item.dart';
+import 'package:kumar_brooms/models/item.dart';
 import 'package:kumar_brooms/repositorys/item_repo.dart';
 
 class ItemViewModel extends ChangeNotifier {

@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/repositorys/customer_repo.dart';
@@ -6,20 +7,25 @@ import 'package:kumar_brooms/repositorys/impl/profile_repo_impl.dart';
 import 'package:kumar_brooms/repositorys/profile_repo.dart';
 import 'package:kumar_brooms/repositorys/item_repo.dart';
 import 'package:kumar_brooms/repositorys/impl/item_repo_impl.dart';
-import 'package:kumar_brooms/repositorys/user_repo.dart'; // Add this
-import 'package:kumar_brooms/repositorys/impl/user_repo_impl.dart'; // Add this
+import 'package:kumar_brooms/repositorys/user_repo.dart';
+import 'package:kumar_brooms/repositorys/impl/user_repo_impl.dart';
+import 'package:kumar_brooms/repositorys/order_repo.dart'; // Add this
+import 'package:kumar_brooms/repositorys/impl/order_repo_impl.dart'; // Add this
 import 'package:kumar_brooms/services/customer_service.dart';
 import 'package:kumar_brooms/services/impl/customer_service_impl.dart';
 import 'package:kumar_brooms/services/impl/profile_service_impl.dart';
 import 'package:kumar_brooms/services/profile_service.dart';
 import 'package:kumar_brooms/services/item_service.dart';
 import 'package:kumar_brooms/services/impl/item_service_impl.dart';
-import 'package:kumar_brooms/services/user_service.dart'; // Add this
-import 'package:kumar_brooms/services/impl/user_service_impl.dart'; // Add this
+import 'package:kumar_brooms/services/user_service.dart';
+import 'package:kumar_brooms/services/impl/user_service_impl.dart';
+import 'package:kumar_brooms/services/order_service.dart'; // Add this
+import 'package:kumar_brooms/services/impl/order_service_impl.dart'; // Add this
 import 'package:kumar_brooms/viewmodels/customer_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/profile_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/item_viewmodel.dart';
-import 'package:kumar_brooms/viewmodels/user_viewmodel.dart'; // Add this
+import 'package:kumar_brooms/viewmodels/user_viewmodel.dart';
+import 'package:kumar_brooms/viewmodels/order_viewmodel.dart'; // Add this
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'wrapper.dart';
@@ -62,7 +68,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<CustomerViewModel>(
           create: (context) => CustomerViewModel(
             context.read<CustomerRepository>(),
-            'someUserId', // Replace with the actual second argument
+            'someUserId', // Replace with actual user ID
           ),
         ),
         // Item providers
@@ -84,6 +90,17 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<UserViewModel>(
           create: (context) => UserViewModel(context.read<UserRepository>()),
+        ),
+        // Order providers
+        Provider<OrderService>(
+          create: (_) => OrderServiceImpl(),
+        ),
+        Provider<OrderRepository>(
+          create: (context) =>
+              OrderRepositoryImpl(context.read<OrderService>()),
+        ),
+        ChangeNotifierProvider<OrderViewModel>(
+          create: (context) => OrderViewModel(context.read<OrderRepository>()),
         ),
       ],
       child: MaterialApp(

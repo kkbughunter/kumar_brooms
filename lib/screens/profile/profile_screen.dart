@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/authmanagement/auth_manage.dart';
 import 'package:kumar_brooms/viewmodels/profile_viewmodel.dart';

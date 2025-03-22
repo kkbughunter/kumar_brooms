@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/authmanagement/auth_manage.dart';
-import 'package:kumar_brooms/model/user.dart';
+import 'package:kumar_brooms/models/user.dart';
 import 'package:kumar_brooms/repositorys/profile_repo.dart';
 
 class ProfileViewModel extends ChangeNotifier {

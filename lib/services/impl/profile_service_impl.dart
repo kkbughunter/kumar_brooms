@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kumar_brooms/model/user.dart';
+import 'package:kumar_brooms/models/user.dart';
 import '../profile_service.dart';
 
 class ProfileServiceImpl implements ProfileService {

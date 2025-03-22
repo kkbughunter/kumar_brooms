@@ -1,4 +1,4 @@
-import 'package:kumar_brooms/model/item.dart';
+import 'package:kumar_brooms/models/item.dart';
 
 abstract class ItemRepository {
   Future<List<Item>> getAllItems();

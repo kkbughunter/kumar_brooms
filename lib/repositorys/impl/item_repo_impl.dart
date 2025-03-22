@@ -1,4 +1,4 @@
-import 'package:kumar_brooms/model/item.dart';
+import 'package:kumar_brooms/models/item.dart';
 import 'package:kumar_brooms/repositorys/item_repo.dart';
 import 'package:kumar_brooms/services/item_service.dart';
 

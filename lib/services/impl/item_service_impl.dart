@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kumar_brooms/model/item.dart';
+import 'package:kumar_brooms/models/item.dart';
 import 'package:kumar_brooms/services/item_service.dart';
 
 class ItemServiceImpl implements ItemService {

@@ -1,5 +1,5 @@
 
-import 'package:kumar_brooms/model/user.dart';
+import 'package:kumar_brooms/models/user.dart';
 import 'package:kumar_brooms/repositorys/profile_repo.dart';
 import 'package:kumar_brooms/services/profile_service.dart';
 

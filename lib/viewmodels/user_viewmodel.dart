@@ -1,6 +1,6 @@
 // lib/viewmodels/user_viewmodel.dart
 import 'package:flutter/material.dart';
-import 'package:kumar_brooms/model/UserPermission.dart';
+import 'package:kumar_brooms/models/UserPermission.dart';
 import 'package:kumar_brooms/repositorys/user_repo.dart';
 
 class UserViewModel extends ChangeNotifier {

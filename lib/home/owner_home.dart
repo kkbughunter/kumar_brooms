@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/screens/manage/manage.dart';
-import 'package:kumar_brooms/screens/manage/manage_item/item_screen.dart';
-import 'package:kumar_brooms/screens/manage/manage_users/user_manage_screen.dart';
 import 'package:kumar_brooms/screens/profile/profile_screen.dart';
+import 'package:kumar_brooms/screens/tracking/tracking_screen.dart';
 import '/authmanagement/auth_manage.dart';
 
 class OwnerHome extends StatefulWidget {
@@ -23,7 +22,7 @@ class _OwnerHomeState extends State<OwnerHome> {
     userID = AuthManage().getUserID();
     body = [
       Text("hello1"),
-      Text("hello2"),
+      Tracking(),
       Manage(),
       Profile(userId: userID),
     ];

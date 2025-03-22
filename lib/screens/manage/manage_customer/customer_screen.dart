@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kumar_brooms/model/customer.dart';
+import 'package:kumar_brooms/models/customer.dart';
 import 'package:kumar_brooms/viewmodels/customer_viewmodel.dart';
 import 'package:provider/provider.dart';
 

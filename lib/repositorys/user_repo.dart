@@ -1,5 +1,5 @@
 // lib/repositorys/user_repo.dart
-import 'package:kumar_brooms/model/UserPermission.dart';
+import 'package:kumar_brooms/models/UserPermission.dart';
 
 abstract class UserRepository {
   Future<List<UserPermission>> getAllUsers();

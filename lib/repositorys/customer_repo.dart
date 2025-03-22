@@ -1,4 +1,4 @@
-import 'package:kumar_brooms/model/customer.dart';
+import 'package:kumar_brooms/models/customer.dart';
 
 abstract class CustomerRepository {
   Future<List<Customer>> getAllCustomers();

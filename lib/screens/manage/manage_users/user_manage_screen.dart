@@ -1,6 +1,6 @@
 // lib/screens/user_manage/user_manage_screen.dart
 import 'package:flutter/material.dart';
-import 'package:kumar_brooms/model/UserPermission.dart';
+import 'package:kumar_brooms/models/UserPermission.dart';
 import 'package:kumar_brooms/viewmodels/user_viewmodel.dart';
 import 'package:provider/provider.dart';
 

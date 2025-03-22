@@ -1,4 +1,4 @@
-import 'package:kumar_brooms/model/customer.dart';
+import 'package:kumar_brooms/models/customer.dart';
 import 'package:kumar_brooms/repositorys/customer_repo.dart';
 import 'package:kumar_brooms/services/customer_service.dart';
 
