@@ -1,5 +1,6 @@
 // lib/viewmodels/user_viewmodel.dart
 import 'package:flutter/material.dart';
+import 'package:kumar_brooms/authmanagement/auth_manage.dart';
 import 'package:kumar_brooms/models/UserPermission.dart';
 import 'package:kumar_brooms/repositorys/user_repo.dart';
 
@@ -8,14 +9,34 @@ class UserViewModel extends ChangeNotifier {
   List<UserPermission> _users = [];
   bool _isLoading = false;
   String? _errorMessage;
+  String? _currentUserRole;
 
   UserViewModel(this._userRepository) {
     fetchAllUsers();
+    _setCurrentUserRole();
   }
 
   List<UserPermission> get users => _users;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get role => _currentUserRole;
+
+  void _setCurrentUserRole() {
+    String uid = AuthManage().getUserID();
+    _currentUserRole = _users
+        .firstWhere(
+          (user) => user.uid == uid,
+          orElse: () => UserPermission(
+            uid: uid,
+            isActive: false,
+            name: '', // Assuming UserPermission has these fields directly
+            phone: '',
+            role: 'worker', // Default role
+          ),
+        )
+        .role; // Access role directly from UserPermission
+    notifyListeners();
+  }
 
   Future<void> fetchAllUsers() async {
     _isLoading = true;
@@ -25,6 +46,7 @@ class UserViewModel extends ChangeNotifier {
     try {
       _users = await _userRepository.getAllUsers();
       print('Users in viewmodel: ${_users.map((u) => u.uid)}');
+      _setCurrentUserRole();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -37,7 +59,7 @@ class UserViewModel extends ChangeNotifier {
 
   Future<void> updateUserPermission(String uid, bool isActive) async {
     _isLoading = true;
-    _errorMessage = null; // Clear previous errors
+    _errorMessage = null;
     notifyListeners();
 
     try {

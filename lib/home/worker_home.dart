@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/authmanagement/auth_manage.dart';
 import 'package:kumar_brooms/screens/profile/profile_screen.dart';
+import 'package:kumar_brooms/screens/tracking/order/order_screen.dart';
+import 'package:kumar_brooms/screens/tracking/work/work_screen.dart'; // Import OrderScreen
 
 class WorkerHome extends StatefulWidget {
   const WorkerHome({super.key});
@@ -19,8 +21,7 @@ class _WorkerHomeState extends State<WorkerHome> {
     super.initState();
     userID = AuthManage().getUserID();
     body = [
-      Text("Worker Home page"),
-      Text("Worker Track Page"),
+      const WorkScreen(), // Replace with OrderScreen
       Profile(userId: userID),
     ];
   }
@@ -40,7 +41,6 @@ class _WorkerHomeState extends State<WorkerHome> {
         },
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
               icon: Icon(Icons.track_changes), label: "Track"),
           BottomNavigationBarItem(

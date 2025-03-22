@@ -42,4 +42,59 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<void> moveOrderToWork(String orderId, int priority) async {
     await _orderService.moveOrderToWork(orderId, priority);
   }
+
+  @override
+  Future<List<MapEntry<String, int>>> getWorkOrders() async {
+    return await _orderService.getWorkOrders();
+  }
+
+  @override
+  Future<void> moveOrderToOrder(String orderId, int priority) async {
+    await _orderService.moveOrderToOrder(orderId, priority);
+  }
+
+  @override
+  Future<void> moveOrderToDelivery(String orderId, int priority) async {
+    await _orderService.moveOrderToDelivery(orderId, priority);
+  }
+
+  @override
+  Future<List<MapEntry<String, int>>> getDeliveryOrders() async {
+    return await _orderService.getDeliveryOrders();
+  }
+
+  @override
+  Future<void> moveOrderToWorkFromDelivery(String orderId, int priority) async {
+    await _orderService.moveOrderToWorkFromDelivery(orderId, priority);
+  }
+
+  @override
+  Future<void> moveOrderToPayment(String orderId, int priority) async {
+    await _orderService.moveOrderToPayment(orderId, priority);
+  }
+
+  @override
+  Future<List<MapEntry<String, int>>> getPaymentOrders() async {
+    return await _orderService.getPaymentOrders();
+  }
+
+  @override
+  Future<void> updateOrderPaid(String orderId, double paid) async {
+    await _orderService.updateOrderPaid(orderId, paid);
+  }
+
+  @override
+  Future<void> moveOrderToDeliveryFromPayment(String orderId, int priority) async {
+    await _orderService.moveOrderToDeliveryFromPayment(orderId, priority);
+  }
+
+  @override
+  Future<void> moveOrderToHistory(String orderId, int priority) async {
+    await _orderService.moveOrderToHistory(orderId, priority);
+  }
+  
+  @override
+  Future<List<MapEntry<String, int>>> getHistoryOrders() async {
+    return await _orderService.getHistoryOrders();
+  }
 }

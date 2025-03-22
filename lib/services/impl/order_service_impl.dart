@@ -133,4 +133,195 @@ class OrderServiceImpl implements OrderService {
       rethrow;
     }
   }
+  @override
+  Future<List<MapEntry<String, int>>> getWorkOrders() async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection(_trackingCollection).doc('work').get();
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
+      List<MapEntry<String, int>> orders = data.entries
+          .map((e) => MapEntry(e.key, e.value as int))
+          .toList();
+      orders.sort((a, b) => a.value.compareTo(b.value));
+      return orders;
+    } catch (e) {
+      print('Error fetching work orders: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> moveOrderToOrder(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('work').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('order').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.work_started': FieldValue.delete(),
+      });
+    } catch (e) {
+      print('Error moving order to order: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> moveOrderToDelivery(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('work').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('delivery').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.delivery_started': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error moving order to delivery: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<MapEntry<String, int>>> getDeliveryOrders() async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection(_trackingCollection).doc('delivery').get();
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
+      List<MapEntry<String, int>> orders = data.entries
+          .map((e) => MapEntry(e.key, e.value as int))
+          .toList();
+      orders.sort((a, b) => a.value.compareTo(b.value));
+      return orders;
+    } catch (e) {
+      print('Error fetching delivery orders: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> moveOrderToWorkFromDelivery(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('delivery').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('work').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.delivery_started': FieldValue.delete(),
+        'time_stamp.work_started': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error moving order to work: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> moveOrderToPayment(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('delivery').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('payment').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.payment_started': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error moving order to payment: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<MapEntry<String, int>>> getPaymentOrders() async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection(_trackingCollection).doc('payment').get();
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
+      List<MapEntry<String, int>> orders = data.entries
+          .map((e) => MapEntry(e.key, e.value as int))
+          .toList();
+      orders.sort((a, b) => a.value.compareTo(b.value));
+      return orders;
+    } catch (e) {
+      print('Error fetching payment orders: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> updateOrderPaid(String orderId, double paid) async {
+    try {
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'paid': paid,
+      });
+    } catch (e) {
+      print('Error updating paid amount: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> moveOrderToDeliveryFromPayment(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('payment').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('delivery').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.payment_started': FieldValue.delete(),
+        'time_stamp.delivery_started': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error moving order to delivery: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> moveOrderToHistory(String orderId, int priority) async {
+    try {
+      await _firestore.collection(_trackingCollection).doc('payment').update({
+        orderId: FieldValue.delete(),
+      });
+      await _firestore.collection(_trackingCollection).doc('history').set(
+        {orderId: priority},
+        SetOptions(merge: true),
+      );
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
+        'time_stamp.history_started': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error moving order to history: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<MapEntry<String, int>>> getHistoryOrders() async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection(_trackingCollection).doc('history').get();
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
+      List<MapEntry<String, int>> orders = data.entries
+          .map((e) => MapEntry(e.key, e.value as int))
+          .toList();
+      orders.sort((a, b) => a.value.compareTo(b.value));
+      return orders;
+    } catch (e) {
+      print('Error fetching history orders: $e');
+      return [];
+    }
+  }
 }
