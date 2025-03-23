@@ -1,4 +1,3 @@
-// lib/screens/owner_home.dart
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:kumar_brooms/authmanagement/auth_manage.dart';
@@ -7,6 +6,7 @@ import 'package:kumar_brooms/models/order.dart';
 import 'package:kumar_brooms/screens/manage/manage.dart';
 import 'package:kumar_brooms/screens/profile/profile_screen.dart';
 import 'package:kumar_brooms/screens/tracking/tracking_screen.dart';
+import 'package:kumar_brooms/viewmodels/customer_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/order_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/item_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -70,12 +70,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String? _selectedCustomerId;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<OrderViewModel>(context, listen: false).fetchAllOrders();
       Provider.of<ItemViewModel>(context, listen: false).fetchAllItems();
+      Provider.of<CustomerViewModel>(context, listen: false)
+          .fetchAllCustomers();
     });
   }
 
@@ -126,8 +130,33 @@ class _HomeState extends State<Home> {
   }
 
   Map<String, int> _calculateItemWiseCount(
-      List<Orders> historyOrders, ItemViewModel itemVM) {
+      List<Orders> historyOrders, ItemViewModel itemVM,
+      {String? customerId}) {
     Map<String, int> itemCounts = {};
+    for (var order in historyOrders) {
+      if (customerId == null || order.customerId == customerId) {
+        for (var itemEntry in order.items.entries) {
+          final itemId = itemEntry.key;
+          final orderedCount = itemEntry.value[0];
+          final item = itemVM.items.firstWhere(
+            (i) => i.id == itemId,
+            orElse: () => Item(
+                itemFor: '',
+                length: 'N/A',
+                name: itemId,
+                price: 0.0,
+                weight: 0),
+          );
+          itemCounts[item.name] = (itemCounts[item.name] ?? 0) + orderedCount;
+        }
+      }
+    }
+    return itemCounts;
+  }
+
+  double _calculateTotalEarned(
+      List<Orders> historyOrders, ItemViewModel itemVM) {
+    double totalEarned = 0;
     for (var order in historyOrders) {
       for (var itemEntry in order.items.entries) {
         final itemId = itemEntry.key;
@@ -137,22 +166,44 @@ class _HomeState extends State<Home> {
           orElse: () => Item(
               itemFor: '', length: 'N/A', name: itemId, price: 0.0, weight: 0),
         );
-        itemCounts[item.name] = (itemCounts[item.name] ?? 0) + orderedCount;
+        totalEarned += item.price * orderedCount;
       }
     }
-    return itemCounts;
+    return totalEarned;
+  }
+
+  double _calculateTotalWeightSold(
+      List<Orders> historyOrders, ItemViewModel itemVM) {
+    double totalWeight = 0;
+    for (var order in historyOrders) {
+      for (var itemEntry in order.items.entries) {
+        final itemId = itemEntry.key;
+        final orderedCount = itemEntry.value[0];
+        final item = itemVM.items.firstWhere(
+          (i) => i.id == itemId,
+          orElse: () => Item(
+              itemFor: '', length: 'N/A', name: itemId, price: 0.0, weight: 0),
+        );
+        totalWeight +=
+            item.weight * orderedCount; // Assuming weight is in grams
+      }
+    }
+    return totalWeight / 1000; // Convert grams to kilograms
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<OrderViewModel, ItemViewModel>(
-      builder: (context, orderVM, itemVM, child) {
-        if (orderVM.isLoading || itemVM.isLoading) {
+    return Consumer3<OrderViewModel, ItemViewModel, CustomerViewModel>(
+      builder: (context, orderVM, itemVM, customerVM, child) {
+        if (orderVM.isLoading || itemVM.isLoading || customerVM.isLoading) {
           return const Center(child: CircularProgressIndicator());
         } else if (orderVM.errorMessage != null ||
-            itemVM.errorMessage != null) {
+            itemVM.errorMessage != null ||
+            customerVM.errorMessage != null) {
           return Center(
-              child: Text(orderVM.errorMessage ?? itemVM.errorMessage!));
+              child: Text(orderVM.errorMessage ??
+                  itemVM.errorMessage ??
+                  customerVM.errorMessage!));
         }
 
         // Data for Orders by Stage Bar Chart
@@ -178,12 +229,19 @@ class _HomeState extends State<Home> {
         // Data for Average Days Bar Chart
         final avgDays = _calculateAverageDays(orderVM.historyOrdersList);
 
-        // Data for Item-wise Count Bar Chart
-        final itemCounts =
-            _calculateItemWiseCount(orderVM.historyOrdersList, itemVM);
-        final itemNames = itemCounts.keys.toList();
-        final itemValues =
-            itemCounts.values.map((count) => count.toDouble()).toList();
+        // Data for Customer-specific Item-wise Count Bar Chart
+        final customerItemCounts = _calculateItemWiseCount(
+            orderVM.historyOrdersList, itemVM,
+            customerId: _selectedCustomerId);
+        final customerItemNames = customerItemCounts.keys.toList();
+        final customerItemValues =
+            customerItemCounts.values.map((count) => count.toDouble()).toList();
+
+        // Data for Total Earned and Total Weight
+        final totalEarned =
+            _calculateTotalEarned(orderVM.historyOrdersList, itemVM);
+        final totalWeight =
+            _calculateTotalWeightSold(orderVM.historyOrdersList, itemVM);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -344,30 +402,76 @@ class _HomeState extends State<Home> {
                 ),
               ),
               const SizedBox(height: 32),
-              const Text('Item-wise Count in History',
+              const Text('Customer Item Purchases',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Autocomplete<String>(
+                  optionsBuilder: (TextEditingValue textEditingValue) {
+                    final allNames =
+                        customerVM.customers.map((customer) => customer.name);
+                    if (textEditingValue.text.isEmpty) {
+                      return allNames; // Show all customer names when empty
+                    }
+                    return allNames.where((name) => name
+                        .toLowerCase()
+                        .contains(textEditingValue.text.toLowerCase()));
+                  },
+                  fieldViewBuilder:
+                      (context, controller, focusNode, onFieldSubmitted) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Search Customer',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setState(() {
+                              _selectedCustomerId = null;
+                              controller.clear();
+                            });
+                          },
+                        ),
+                      ),
+                      onSubmitted: (value) => onFieldSubmitted(),
+                    );
+                  },
+                  onSelected: (String customerName) {
+                    final selectedCustomer = customerVM.customers.firstWhere(
+                      (customer) => customer.name == customerName,
+                      orElse: () => customerVM
+                          .customers.first, // Fallback, should not happen
+                    );
+                    setState(() {
+                      _selectedCustomerId = selectedCustomer.id;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
               SizedBox(
-                height: 300, // Increased height for potentially more items
-                child: itemCounts.isEmpty
-                    ? const Center(child: Text('No items in history'))
+                height: 300,
+                child: customerItemCounts.isEmpty
+                    ? const Center(
+                        child: Text('No items purchased by this customer'))
                     : SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
-                          width: itemNames.length *
-                              60.0, // Dynamic width based on item count
+                          width: customerItemNames.length * 60.0,
                           child: BarChart(
                             BarChartData(
                               alignment: BarChartAlignment.spaceAround,
                               barGroups: List.generate(
-                                itemNames.length,
+                                customerItemNames.length,
                                 (index) => BarChartGroupData(
                                   x: index,
                                   barRods: [
                                     BarChartRodData(
-                                      toY: itemValues[index],
-                                      color: Colors
-                                          .teal, // Consistent color; can vary if desired
+                                      toY: customerItemValues[index],
+                                      color: Colors.teal,
                                     ),
                                   ],
                                 ),
@@ -383,14 +487,14 @@ class _HomeState extends State<Home> {
                                     getTitlesWidget: (value, meta) {
                                       final index = value.toInt();
                                       if (index >= 0 &&
-                                          index < itemNames.length) {
+                                          index < customerItemNames.length) {
                                         return Transform.rotate(
                                           angle: -45 * 3.14159 / 180,
                                           child: Padding(
                                             padding:
                                                 const EdgeInsets.only(top: 8.0),
                                             child: Text(
-                                              itemNames[index],
+                                              customerItemNames[index],
                                               style:
                                                   const TextStyle(fontSize: 12),
                                               overflow: TextOverflow.ellipsis,
@@ -411,6 +515,49 @@ class _HomeState extends State<Home> {
                         ),
                       ),
               ),
+              const SizedBox(height: 32),
+              const Text('Total Company Earnings and Weight Sold',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 200,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    barGroups: [
+                      BarChartGroupData(x: 0, barRods: [
+                        BarChartRodData(
+                            toY: totalEarned, color: Colors.green, width: 20)
+                      ]),
+                      BarChartGroupData(x: 1, barRods: [
+                        BarChartRodData(
+                            toY: totalWeight, color: Colors.blue, width: 20)
+                      ]),
+                    ],
+                    titlesData: FlTitlesData(
+                      leftTitles: const AxisTitles(
+                          sideTitles:
+                              SideTitles(showTitles: true, reservedSize: 40)),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            const titles = ['Earnings (\rs )', 'Weight (kg)'];
+                            return Text(titles[value.toInt()],
+                                style: const TextStyle(fontSize: 12));
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    gridData: const FlGridData(show: false),
+                  ),
+                ),
+              ),
+              Text('Total Earned: rs ${totalEarned.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 16)),
+              Text('Total Weight Sold: ${totalWeight.toStringAsFixed(2)} kg',
+                  style: const TextStyle(fontSize: 16)),
             ],
           ),
         );

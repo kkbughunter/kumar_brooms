@@ -28,16 +28,7 @@ class _ManageState extends State<Manage> {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
-            _buildManageCard(
-              context,
-              icon: Icons.person,
-              title: "Manage Users",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UserManageScreen()),
-              ),
-            ),
+            
             _buildManageCard(
               context,
               icon: Icons.group,
@@ -54,6 +45,16 @@ class _ManageState extends State<Manage> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ItemScreen()),
+              ),
+            ),
+            _buildManageCard(
+              context,
+              icon: Icons.person,
+              title: "Manage Users",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const UserManageScreen()),
               ),
             ),
           ],

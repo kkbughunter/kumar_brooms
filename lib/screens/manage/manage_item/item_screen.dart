@@ -18,7 +18,10 @@ class _ItemScreenState extends State<ItemScreen> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _weightController = TextEditingController();
+  final _searchController =
+      TextEditingController(); // Controller for search field
   String? _selectedCustomerId;
+  String? _filteredCustomerId; // For filtering displayed items
 
   @override
   void initState() {
@@ -31,7 +34,7 @@ class _ItemScreenState extends State<ItemScreen> {
   }
 
   void _showAddItemDialog() {
-    _selectedCustomerId = null; // Reset selection
+    _selectedCustomerId = null; // Reset selection for dialog
     showDialog(
       context: context,
       builder: (context) {
@@ -54,7 +57,8 @@ class _ItemScreenState extends State<ItemScreen> {
                             child: Text(customer.name),
                           );
                         }).toList(),
-                        onChanged: (value) => _selectedCustomerId = value,
+                        onChanged: (value) =>
+                            setState(() => _selectedCustomerId = value),
                         validator: (value) => value == null ? 'Required' : null,
                       );
                     },
@@ -143,7 +147,8 @@ class _ItemScreenState extends State<ItemScreen> {
                             child: Text(customer.name),
                           );
                         }).toList(),
-                        onChanged: (value) => _selectedCustomerId = value,
+                        onChanged: (value) =>
+                            setState(() => _selectedCustomerId = value),
                         validator: (value) => value == null ? 'Required' : null,
                       );
                     },
@@ -219,92 +224,160 @@ class _ItemScreenState extends State<ItemScreen> {
         title: const Text('Items'),
         centerTitle: true,
       ),
-      body: Consumer<ItemViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (viewModel.errorMessage != null) {
-            return Center(child: Text(viewModel.errorMessage!));
-          } else if (viewModel.items.isEmpty) {
-            return const Center(child: Text('No items available.'));
-          } else {
-            return ListView.builder(
-              itemCount: viewModel.items.length,
-              itemBuilder: (context, index) {
-                final item = viewModel.items[index];
-                return Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Consumer<CustomerViewModel>(
-                      builder: (context, customerVM, child) {
-                        final customer = customerVM.customers
-                            .firstWhere((c) => c.id == item.itemFor,
-                                orElse: () => Customer(
-                                      id: item.itemFor,
-                                      name: 'Unknown',
-                                      phone1: '',
-                                      phone2: '',
-                                      shopAddress: '',
-                                      shopName: '',
-                                    ));
-                        return Text(
-                          '${item.name} - ${customer.name}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        );
-                      },
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Length: ${item.length}'),
-                        Text('Price: \$${item.price}'),
-                        Text('Weight: ${item.weight} kg'),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _showEditItemDialog(item),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Consumer<CustomerViewModel>(
+              builder: (context, customerVM, child) {
+                return Autocomplete<Customer>(
+                  optionsBuilder: (TextEditingValue textEditingValue) {
+                    if (textEditingValue.text.isEmpty) {
+                      return const Iterable<
+                          Customer>.empty(); // Show nothing when empty
+                    }
+                    return customerVM.customers.where((customer) {
+                      return customer.name
+                          .toLowerCase()
+                          .contains(textEditingValue.text.toLowerCase());
+                    });
+                  },
+                  displayStringForOption: (Customer customer) => customer.name,
+                  fieldViewBuilder:
+                      (context, controller, focusNode, onFieldSubmitted) {
+                    _searchController.text =
+                        controller.text; // Sync with external controller
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Search Customer',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.clear),
                           onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Item'),
-                                content: const Text(
-                                    'Are you sure you want to delete this item?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Provider.of<ItemViewModel>(context,
-                                              listen: false)
-                                          .deleteItem(item.id!);
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
+                            setState(() {
+                              _filteredCustomerId = null;
+                              _searchController.clear();
+                            });
                           },
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                      onSubmitted: (value) => onFieldSubmitted(),
+                    );
+                  },
+                  onSelected: (Customer customer) {
+                    setState(() {
+                      _filteredCustomerId = customer.id;
+                      _searchController.text =
+                          customer.name; // Update text field with selected name
+                    });
+                  },
                 );
               },
-            );
-          }
-        },
+            ),
+          ),
+          Expanded(
+            child: Consumer<ItemViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (viewModel.errorMessage != null) {
+                  return Center(child: Text(viewModel.errorMessage!));
+                } else if (viewModel.items.isEmpty) {
+                  return const Center(child: Text('No items available.'));
+                } else {
+                  final filteredItems = _filteredCustomerId == null
+                      ? viewModel.items
+                      : viewModel.items
+                          .where((item) => item.itemFor == _filteredCustomerId)
+                          .toList();
+                  if (filteredItems.isEmpty) {
+                    return const Center(
+                        child: Text('No items for this customer.'));
+                  }
+                  return ListView.builder(
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      return Card(
+                        margin: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Consumer<CustomerViewModel>(
+                            builder: (context, customerVM, child) {
+                              final customer = customerVM.customers.firstWhere(
+                                (c) => c.id == item.itemFor,
+                                orElse: () => Customer(
+                                  id: item.itemFor,
+                                  name: 'Unknown',
+                                  phone1: '',
+                                  phone2: '',
+                                  shopAddress: '',
+                                  shopName: '',
+                                ),
+                              );
+                              return Text(
+                                '${item.name} - ${customer.name}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              );
+                            },
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Length: ${item.length}'),
+                              Text('Price: \$${item.price}'),
+                              Text('Weight: ${item.weight} kg'),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _showEditItemDialog(item),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete Item'),
+                                      content: const Text(
+                                          'Are you sure you want to delete this item?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Provider.of<ItemViewModel>(context,
+                                                    listen: false)
+                                                .deleteItem(item.id!);
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddItemDialog,
@@ -319,6 +392,7 @@ class _ItemScreenState extends State<ItemScreen> {
     _nameController.dispose();
     _priceController.dispose();
     _weightController.dispose();
+    _searchController.dispose(); // Dispose search controller
     super.dispose();
   }
 }

@@ -26,29 +26,57 @@ class AuthManage {
 
   // ---------------------------- Google Login ------------------------------------- //
   // Logo In with Google
-  // ignore: non_constant_identifier_names
+  // Future<UserCredential?> LoginWithGoogle() async {
+  //   try {
+  //     final googleSignIn = GoogleSignIn();
+
+  //     // Sign out to ensure account selection prompt
+  //     await googleSignIn.signOut();
+
+  //     final googleUser = await googleSignIn.signIn();
+  //     if (googleUser == null) return null; // User canceled the sign-in
+
+  //     final googleAuth = await googleUser.authentication;
+
+  //     final credential = GoogleAuthProvider.credential(
+  //       accessToken: googleAuth.accessToken,
+  //       idToken: googleAuth.idToken,
+  //     );
+
+  //     return await FirebaseAuth.instance.signInWithCredential(credential);
+  //   } catch (e) {
+  //     throw Exception("An unexpected error occurred: ${e.toString()}");
+  //   }
+  // }
+  
   Future<UserCredential?> LoginWithGoogle() async {
-    try {
-      final googleSignIn = GoogleSignIn();
+  try {
+    final googleSignIn = GoogleSignIn();
 
-      // Sign out to ensure account selection prompt
-      await googleSignIn.signOut();
+    // Sign out to ensure account selection prompt
+    await googleSignIn.signOut();
 
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return null; // User canceled the sign-in
-
-      final googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      return await FirebaseAuth.instance.signInWithCredential(credential);
-    } catch (e) {
-      throw Exception("An unexpected error occurred: ${e.toString()}");
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      print("Google Sign-In canceled by user");
+      return null;
     }
+
+    final googleAuth = await googleUser.authentication;
+    print("Google Auth Tokens: Access=${googleAuth.accessToken}, ID=${googleAuth.idToken}");
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  } catch (e, stackTrace) {
+    print("Google Sign-In Error: $e");
+    print("Stack Trace: $stackTrace");
+    throw Exception("Google Sign-In failed: ${e.toString()}");
   }
+}
 
   // ---------------------------- Common function ------------------------------------- //
 

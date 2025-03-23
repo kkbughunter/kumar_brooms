@@ -1,4 +1,3 @@
-// lib/screens/tracking/history/history_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +15,9 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -134,62 +136,130 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('History'),
-      ),
-      body: Consumer2<OrderViewModel, ItemViewModel>(
-        builder: (context, orderVM, itemVM, child) {
-          if (orderVM.isLoading || itemVM.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (orderVM.errorMessage != null) {
-            return Center(child: Text(orderVM.errorMessage!));
-          } else if (orderVM.historyOrdersList.isEmpty) {
-            return const Center(child: Text('No history orders available.'));
-          } else {
-            return ListView.builder(
-              itemCount: orderVM.historyOrdersList.length,
-              itemBuilder: (context, index) {
-                final order = orderVM.historyOrdersList[index];
-                final customer = orderVM.customers.firstWhere(
-                  (c) => c['id'] == order.customerId,
-                  orElse: () => {'id': order.customerId, 'name': 'Unknown'},
-                );
-                final timestamps = order.timestamps ?? {};
-
-                return InkWell(
-                  onTap: () => _showOrderDetailsDialog(context, order),
-                  child: Card(
-                    margin: const EdgeInsets.all(8.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Order ID: ${order.id}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          Text('Customer: ${customer['name']}'),
-                          const SizedBox(height: 8),
-                          Text(
-                              'Order Placed: ${_formatTimestamp(timestamps['order_placed'])}'),
-                          Text(
-                              'Work Started: ${_formatTimestamp(timestamps['work_started'])} (${_calculateDaysDifference(timestamps['order_placed'], timestamps['work_started'])})'),
-                          Text(
-                              'Delivery Started: ${_formatTimestamp(timestamps['delivery_started'])} (${_calculateDaysDifference(timestamps['work_started'], timestamps['delivery_started'])})'),
-                          Text(
-                              'Payment Started: ${_formatTimestamp(timestamps['payment_started'])} (${_calculateDaysDifference(timestamps['delivery_started'], timestamps['payment_started'])})'),
-                          Text(
-                              'Completed: ${_formatTimestamp(timestamps['history_started'])} (${_calculateDaysDifference(timestamps['payment_started'], timestamps['history_started'])})'),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search by Customer or Item Name',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      _searchQuery = '';
+                      _searchController.clear();
+                    });
+                  },
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim().toLowerCase();
+                });
               },
-            );
-          }
-        },
+            ),
+          ),
+          Expanded(
+            child: Consumer2<OrderViewModel, ItemViewModel>(
+              builder: (context, orderVM, itemVM, child) {
+                if (orderVM.isLoading || itemVM.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (orderVM.errorMessage != null) {
+                  return Center(child: Text(orderVM.errorMessage!));
+                } else if (orderVM.historyOrdersList.isEmpty) {
+                  return const Center(
+                      child: Text('No history orders available.'));
+                } else {
+                  final filteredOrders =
+                      orderVM.historyOrdersList.where((order) {
+                    final customer = orderVM.customers.firstWhere(
+                      (c) => c['id'] == order.customerId,
+                      orElse: () => {'id': order.customerId, 'name': 'Unknown'},
+                    );
+                    final customerName =
+                        customer['name'].toString().toLowerCase();
+                    final itemNames = order.items.entries.map((e) {
+                      final item = itemVM.items.firstWhere(
+                        (i) => i.id == e.key,
+                        orElse: () => Item(
+                          itemFor: '',
+                          length: 'N/A',
+                          name: e.key,
+                          price: 0.0,
+                          weight: 0,
+                        ),
+                      );
+                      return item.name.toLowerCase();
+                    }).toList();
+
+                    return _searchQuery.isEmpty ||
+                        customerName.contains(_searchQuery) ||
+                        itemNames.any((name) => name.contains(_searchQuery));
+                  }).toList();
+
+                  if (filteredOrders.isEmpty) {
+                    return const Center(
+                        child: Text('No matching orders found.'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: filteredOrders.length,
+                    itemBuilder: (context, index) {
+                      final order = filteredOrders[index];
+                      final customer = orderVM.customers.firstWhere(
+                        (c) => c['id'] == order.customerId,
+                        orElse: () =>
+                            {'id': order.customerId, 'name': 'Unknown'},
+                      );
+                      final timestamps = order.timestamps ?? {};
+
+                      return InkWell(
+                        onTap: () => _showOrderDetailsDialog(context, order),
+                        child: Card(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Order ID: ${order.id}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
+                                Text('Customer: ${customer['name']}'),
+                                const SizedBox(height: 8),
+                                Text(
+                                    'Order Placed: ${_formatTimestamp(timestamps['order_placed'])}'),
+                                Text(
+                                    'Work Started: ${_formatTimestamp(timestamps['work_started'])} (${_calculateDaysDifference(timestamps['order_placed'], timestamps['work_started'])})'),
+                                Text(
+                                    'Delivery Started: ${_formatTimestamp(timestamps['delivery_started'])} (${_calculateDaysDifference(timestamps['work_started'], timestamps['delivery_started'])})'),
+                                Text(
+                                    'Payment Started: ${_formatTimestamp(timestamps['payment_started'])} (${_calculateDaysDifference(timestamps['delivery_started'], timestamps['payment_started'])})'),
+                                Text(
+                                    'Completed: ${_formatTimestamp(timestamps['history_started'])} (${_calculateDaysDifference(timestamps['payment_started'], timestamps['history_started'])})'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

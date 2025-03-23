@@ -35,9 +35,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payment'),
-      ),
       body: Consumer2<OrderViewModel, ItemViewModel>(
         builder: (context, orderVM, itemVM, child) {
           if (orderVM.isLoading || itemVM.isLoading) {
