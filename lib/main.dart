@@ -66,10 +66,8 @@ class MyApp extends StatelessWidget {
               CustomerRepositoryImpl(context.read<CustomerService>()),
         ),
         ChangeNotifierProvider<CustomerViewModel>(
-          create: (context) => CustomerViewModel(
-            context.read<CustomerRepository>(),
-            'someUserId', // Replace with actual user ID
-          ),
+          create: (context) =>
+              CustomerViewModel(context.read<CustomerRepository>()),
         ),
         // Item providers
         Provider<ItemService>(

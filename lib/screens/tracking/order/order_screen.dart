@@ -1,9 +1,10 @@
-// lib/screens/tracking/order/order_screen.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // use to identify timestamp 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kumar_brooms/models/customer.dart';
 import 'package:kumar_brooms/models/item.dart';
 import 'package:kumar_brooms/models/order.dart';
+import 'package:kumar_brooms/viewmodels/customer_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/item_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/order_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -23,12 +24,15 @@ class _OrderScreenState extends State<OrderScreen> {
       Provider.of<OrderViewModel>(context, listen: false).fetchTrackingOrders();
       Provider.of<OrderViewModel>(context, listen: false).fetchCustomers();
       Provider.of<ItemViewModel>(context, listen: false).fetchAllItems();
+      Provider.of<CustomerViewModel>(context, listen: false)
+          .fetchAllCustomers();
     });
   }
 
   void _showAddOrderDialog(BuildContext context) {
     final orderVM = Provider.of<OrderViewModel>(context, listen: false);
     final itemVM = Provider.of<ItemViewModel>(context, listen: false);
+    final customerVM = Provider.of<CustomerViewModel>(context, listen: false);
     String? selectedCustomer;
     String? selectedItem;
     TextEditingController quantityController = TextEditingController();
@@ -50,20 +54,35 @@ class _OrderScreenState extends State<OrderScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Customer'),
-                    items: orderVM.customers
-                        .map((c) => DropdownMenuItem(
-                              value: c['id'],
-                              child: Text(c['name']!),
-                            ))
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      selectedCustomer = value;
-                      selectedItem = null;
-                      newItems.clear();
-                    }),
-                  ),
+                  Container(
+                    width:
+                        250, // Fixed width to prevent overflow, adjust as needed
+                    child: DropdownButtonFormField<String>(
+                      isExpanded:
+                          true, // Ensures the dropdown takes full width and wraps text
+                      decoration: const InputDecoration(
+                        labelText: 'Customer',
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5), // Reduce padding
+                      ),
+                      items: orderVM.customers
+                          .map((c) => DropdownMenuItem(
+                                value: c['id'],
+                                child: Text(
+                                  c['name']!,
+                                  overflow: TextOverflow
+                                      .ellipsis, // Truncate long names
+                                  maxLines: 1,
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (value) => setState(() {
+                        selectedCustomer = value;
+                        selectedItem = null;
+                        newItems.clear();
+                      }),
+                    ),
+),
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(labelText: 'Item'),
                     items: filteredItems
@@ -107,13 +126,92 @@ class _OrderScreenState extends State<OrderScreen> {
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (selectedCustomer != null && newItems.isNotEmpty) {
+                      // Calculate total order amount
+                      double totalAmount = newItems.entries
+                          .map((e) =>
+                              itemVM.items
+                                  .firstWhere((i) => i.id == e.key,
+                                      orElse: () => Item(
+                                          itemFor: '',
+                                          length: 'N/A',
+                                          name: e.key,
+                                          price: 0.0,
+                                          weight: 0))
+                                  .price *
+                              e.value[0])
+                          .reduce((a, b) => a + b);
+
+                      // Get customer data
+                      final customer = customerVM.customers.firstWhere(
+                        (c) => c.id == selectedCustomer,
+                        orElse: () => Customer(
+                            name: 'Unknown',
+                            phone1: '',
+                            phone2: '',
+                            shopAddress: '',
+                            shopName: ''),
+                      );
+                      double advanceAmount = customer.advanceAmount;
+
                       Orders newOrder = Orders(
                         customerId: selectedCustomer!,
                         items: newItems,
                         timestamps: {},
+                        paid: 0.0, // Initialize paid as 0
                       );
+
+                      if (advanceAmount > 0) {
+                        bool? useAdvance = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Use Advance Amount?'),
+                            content: Text(
+                                'Customer has ${advanceAmount.toStringAsFixed(2)} advance. Total order amount is ${totalAmount.toStringAsFixed(2)}. Reduce advance amount to cover this order?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('No'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Yes'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (useAdvance == true) {
+                          double amountToDeduct = totalAmount > advanceAmount
+                              ? advanceAmount
+                              : totalAmount;
+                          newOrder.paid =
+                              amountToDeduct; // Update order paid amount
+                          double newAdvance = advanceAmount - amountToDeduct;
+                          double newPending = totalAmount - amountToDeduct;
+
+                          // Update customer
+                          final updatedCustomer = Customer(
+                            id: customer.id,
+                            name: customer.name,
+                            phone1: customer.phone1,
+                            phone2: customer.phone2,
+                            shopAddress: customer.shopAddress,
+                            shopName: customer.shopName,
+                            advanceAmount: newAdvance,
+                            pendingAmount: customer.pendingAmount + newPending,
+                            advanceLastUpdate: Timestamp.now(),
+                            pendingLastUpdate: newPending > 0
+                                ? Timestamp.now()
+                                : customer.pendingLastUpdate,
+                          );
+                          await customerVM.updateCustomer(
+                              customer.id!, updatedCustomer);
+                        }
+                      }
+
+                      // Add the order
                       orderVM.addOrder(newOrder, 1);
                       Navigator.pop(context);
                     }
@@ -348,8 +446,7 @@ class _OrderScreenState extends State<OrderScreen> {
                     price: double.parse(priceController.text),
                     weight: int.parse(weightController.text),
                   );
-                  itemVM.updateItem(
-                      itemId, updatedItem); // Pass both itemId and updatedItem
+                  itemVM.updateItem(itemId, updatedItem);
                   Navigator.pop(context);
                 }
               },
@@ -372,9 +469,9 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer2<OrderViewModel, ItemViewModel>(
-        builder: (context, orderVM, itemVM, child) {
-          if (orderVM.isLoading || itemVM.isLoading) {
+      body: Consumer3<OrderViewModel, ItemViewModel, CustomerViewModel>(
+        builder: (context, orderVM, itemVM, customerVM, child) {
+          if (orderVM.isLoading || itemVM.isLoading || customerVM.isLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (orderVM.errorMessage != null) {
             return Center(child: Text(orderVM.errorMessage!));
@@ -416,12 +513,8 @@ class _OrderScreenState extends State<OrderScreen> {
                                       DataColumn(label: Text('Ordered')),
                                       DataColumn(label: Text('Done')),
                                       DataColumn(label: Text('Total')),
-                                      DataColumn(
-                                          label:
-                                              Text('Edit')), // Edit for Order
-                                      DataColumn(
-                                          label: Text(
-                                              'Edit Item')), // New Edit for Item Details
+                                      DataColumn(label: Text('Edit')),
+                                      DataColumn(label: Text('Edit Item')),
                                     ],
                                     rows: order.items.entries.map((e) {
                                       final item = itemVM.items.firstWhere(
@@ -484,7 +577,8 @@ class _OrderScreenState extends State<OrderScreen> {
                                 if (order.paid != null)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text('Paid: ${order.paid}'),
+                                    child: Text(
+                                        'Paid: ${order.paid!.toStringAsFixed(2)}'),
                                   ),
                               ],
                             ),

@@ -9,11 +9,10 @@ class CustomerServiceImpl implements CustomerService {
   @override
   Future<List<Customer>> getAllCustomers() async {
     try {
-      QuerySnapshot<Map<String, dynamic>> snapshot =
-          await _firestore.collection(_collection).get();
+      QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore.collection(_collection).get();
       return snapshot.docs.map((doc) {
         final customer = Customer.fromJson(doc.data());
-        customer.id = doc.id; // Set the ID from the document
+        customer.id = doc.id;
         return customer;
       }).toList();
     } catch (e) {
@@ -29,8 +28,13 @@ class CustomerServiceImpl implements CustomerService {
       int nextId = snapshot.docs.length + 1;
       String customerId = 'c$nextId';
 
+      // Set timestamps if amounts are provided
+      final now = Timestamp.now();
+      if (customer.advanceAmount > 0) customer.advanceLastUpdate = now;
+      if (customer.pendingAmount > 0) customer.pendingLastUpdate = now;
+
       await _firestore.collection(_collection).doc(customerId).set(customer.toJson());
-      customer.id = customerId; // Set the ID on the customer object
+      customer.id = customerId;
     } catch (e) {
       print('Error adding customer: $e');
       rethrow;
@@ -40,6 +44,17 @@ class CustomerServiceImpl implements CustomerService {
   @override
   Future<void> updateCustomer(String customerId, Customer customer) async {
     try {
+      // Update timestamps if amounts change
+      final existingCustomerDoc = await _firestore.collection(_collection).doc(customerId).get();
+      final existingCustomer = Customer.fromJson(existingCustomerDoc.data()!);
+      final now = Timestamp.now();
+      if (customer.advanceAmount != existingCustomer.advanceAmount) {
+        customer.advanceLastUpdate = now;
+      }
+      if (customer.pendingAmount != existingCustomer.pendingAmount) {
+        customer.pendingLastUpdate = now;
+      }
+
       await _firestore.collection(_collection).doc(customerId).update(customer.toJson());
     } catch (e) {
       print('Error updating customer: $e');

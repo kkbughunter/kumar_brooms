@@ -8,8 +8,7 @@ class CustomerViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  CustomerViewModel(this._customerRepository, delineation);
-  
+  CustomerViewModel(this._customerRepository); // Fixed typo: removed 'delineation'
 
   List<Customer> get customers => _customers;
   bool get isLoading => _isLoading;
@@ -37,7 +36,7 @@ class CustomerViewModel extends ChangeNotifier {
 
     try {
       await _customerRepository.addCustomer(customer);
-      await fetchAllCustomers(); // Refresh the list
+      await fetchAllCustomers();
     } catch (e) {
       _errorMessage = 'Failed to add customer: $e';
       _isLoading = false;
@@ -51,7 +50,7 @@ class CustomerViewModel extends ChangeNotifier {
 
     try {
       await _customerRepository.updateCustomer(customerId, customer);
-      await fetchAllCustomers(); // Refresh the list
+      await fetchAllCustomers();
     } catch (e) {
       _errorMessage = 'Failed to update customer: $e';
       _isLoading = false;
@@ -65,7 +64,7 @@ class CustomerViewModel extends ChangeNotifier {
 
     try {
       await _customerRepository.deleteCustomer(customerId);
-      await fetchAllCustomers(); // Refresh the list
+      await fetchAllCustomers();
     } catch (e) {
       _errorMessage = 'Failed to delete customer: $e';
       _isLoading = false;

@@ -316,91 +316,91 @@ class _HomeState extends State<Home> {
                 ),
               ),
               const SizedBox(height: 32),
-              const Text('Completed vs Incomplete Items',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 200,
-                child: PieChart(
-                  PieChartData(
-                    sections: [
-                      PieChartSectionData(
-                        value: totalCompleted.toDouble(),
-                        color: Colors.green,
-                        title: 'Completed\n$totalCompleted',
-                        radius: 50,
-                        titleStyle:
-                            const TextStyle(fontSize: 12, color: Colors.white),
-                      ),
-                      PieChartSectionData(
-                        value: totalIncomplete.toDouble(),
-                        color: Colors.red,
-                        title: 'Incomplete\n$totalIncomplete',
-                        radius: 50,
-                        titleStyle:
-                            const TextStyle(fontSize: 12, color: Colors.white),
-                      ),
-                    ],
-                    centerSpaceRadius: 40,
-                    sectionsSpace: 2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Text('Average Days per Stage Transition',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 250,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    barGroups: [
-                      BarChartGroupData(x: 0, barRods: [
-                        BarChartRodData(toY: avgDays[0], color: Colors.blue)
-                      ]),
-                      BarChartGroupData(x: 1, barRods: [
-                        BarChartRodData(toY: avgDays[1], color: Colors.green)
-                      ]),
-                      BarChartGroupData(x: 2, barRods: [
-                        BarChartRodData(toY: avgDays[2], color: Colors.orange)
-                      ]),
-                      BarChartGroupData(x: 3, barRods: [
-                        BarChartRodData(toY: avgDays[3], color: Colors.purple)
-                      ]),
-                    ],
-                    titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(
-                          sideTitles:
-                              SideTitles(showTitles: true, reservedSize: 40)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 60,
-                          getTitlesWidget: (value, meta) {
-                            const titles = [
-                              'Order->Work',
-                              'Work->Delivery',
-                              'Delivery->Payment',
-                              'Payment->History'
-                            ];
-                            return Transform.rotate(
-                              angle: -45 * 3.14159 / 180,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(titles[value.toInt()],
-                                    style: const TextStyle(fontSize: 12)),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
-                  ),
-                ),
-              ),
+              // const Text('Completed vs Incomplete Items',
+              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              // const SizedBox(height: 16),
+              // SizedBox(
+              //   height: 200,
+              //   child: PieChart(
+              //     PieChartData(
+              //       sections: [
+              //         PieChartSectionData(
+              //           value: totalCompleted.toDouble(),
+              //           color: Colors.green,
+              //           title: 'Completed\n$totalCompleted',
+              //           radius: 50,
+              //           titleStyle:
+              //               const TextStyle(fontSize: 12, color: Colors.white),
+              //         ),
+              //         PieChartSectionData(
+              //           value: totalIncomplete.toDouble(),
+              //           color: Colors.red,
+              //           title: 'Incomplete\n$totalIncomplete',
+              //           radius: 50,
+              //           titleStyle:
+              //               const TextStyle(fontSize: 12, color: Colors.white),
+              //         ),
+              //       ],
+              //       centerSpaceRadius: 40,
+              //       sectionsSpace: 2,
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(height: 32),
+              // const Text('Average Days per Stage Transition',
+              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              // const SizedBox(height: 16),
+              // SizedBox(
+              //   height: 250,
+              //   child: BarChart(
+              //     BarChartData(
+              //       alignment: BarChartAlignment.spaceAround,
+              //       barGroups: [
+              //         BarChartGroupData(x: 0, barRods: [
+              //           BarChartRodData(toY: avgDays[0], color: Colors.blue)
+              //         ]),
+              //         BarChartGroupData(x: 1, barRods: [
+              //           BarChartRodData(toY: avgDays[1], color: Colors.green)
+              //         ]),
+              //         BarChartGroupData(x: 2, barRods: [
+              //           BarChartRodData(toY: avgDays[2], color: Colors.orange)
+              //         ]),
+              //         BarChartGroupData(x: 3, barRods: [
+              //           BarChartRodData(toY: avgDays[3], color: Colors.purple)
+              //         ]),
+              //       ],
+              //       titlesData: FlTitlesData(
+              //         leftTitles: const AxisTitles(
+              //             sideTitles:
+              //                 SideTitles(showTitles: true, reservedSize: 40)),
+              //         bottomTitles: AxisTitles(
+              //           sideTitles: SideTitles(
+              //             showTitles: true,
+              //             reservedSize: 60,
+              //             getTitlesWidget: (value, meta) {
+              //               const titles = [
+              //                 'Order->Work',
+              //                 'Work->Delivery',
+              //                 'Delivery->Payment',
+              //                 'Payment->History'
+              //               ];
+              //               return Transform.rotate(
+              //                 angle: -45 * 3.14159 / 180,
+              //                 child: Padding(
+              //                   padding: const EdgeInsets.only(top: 8.0),
+              //                   child: Text(titles[value.toInt()],
+              //                       style: const TextStyle(fontSize: 12)),
+              //                 ),
+              //               );
+              //             },
+              //           ),
+              //         ),
+              //       ),
+              //       borderData: FlBorderData(show: false),
+              //       gridData: const FlGridData(show: false),
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 32),
               const Text('Customer Item Purchases',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

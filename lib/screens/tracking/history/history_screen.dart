@@ -17,6 +17,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
@@ -133,6 +134,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  void _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      initialDateRange: _selectedDateRange,
+    );
+    if (picked != null && picked != _selectedDateRange) {
+      setState(() {
+        _selectedDateRange = picked;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,6 +176,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   _searchQuery = value.trim().toLowerCase();
                 });
               },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedDateRange == null
+                        ? 'Filter by Date'
+                        : 'Date: ${DateFormat('MM/dd/yy').format(_selectedDateRange!.start)} - ${DateFormat('MM/dd/yy').format(_selectedDateRange!.end)}',
+                    style: const TextStyle(fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.date_range),
+                      onPressed: () => _selectDateRange(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    if (_selectedDateRange != null)
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _selectedDateRange = null;
+                          });
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -196,9 +250,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       return item.name.toLowerCase();
                     }).toList();
 
-                    return _searchQuery.isEmpty ||
+                    final orderPlaced = order.timestamps?['order_placed'];
+                    final matchesSearch = _searchQuery.isEmpty ||
                         customerName.contains(_searchQuery) ||
                         itemNames.any((name) => name.contains(_searchQuery));
+                    final matchesDate = _selectedDateRange == null ||
+                        (orderPlaced != null &&
+                            orderPlaced.toDate().isAfter(_selectedDateRange!
+                                .start
+                                .subtract(const Duration(days: 1))) &&
+                            orderPlaced.toDate().isBefore(_selectedDateRange!
+                                .end
+                                .add(const Duration(days: 1))));
+
+                    return matchesSearch && matchesDate;
                   }).toList();
 
                   if (filteredOrders.isEmpty) {
