@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For formatting timestamps
+import 'package:intl/intl.dart';
 import 'package:kumar_brooms/models/customer.dart';
 import 'package:kumar_brooms/viewmodels/customer_viewmodel.dart';
 import 'package:provider/provider.dart';
@@ -20,11 +20,11 @@ class _CustomerScreenState extends State<CustomerScreen> {
   final _shopAddressController = TextEditingController();
   final _shopNameController = TextEditingController();
   final _advanceAmountController = TextEditingController();
-  final _pendingAmountController = TextEditingController(); // New controller
+  final _pendingAmountController = TextEditingController();
 
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return 'N/A';
-    return DateFormat('yyyy-MM-dd HH:mm').format(timestamp.toDate());
+    return DateFormat('dd MMM yyyy, HH:mm').format(timestamp.toDate());
   }
 
   @override
@@ -42,7 +42,10 @@ class _CustomerScreenState extends State<CustomerScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Add New Customer'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Add New Customer',
+              style: TextStyle(color: Colors.teal)),
           content: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -50,54 +53,91 @@ class _CustomerScreenState extends State<CustomerScreen> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.person, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _phone1Controller,
-                    decoration: const InputDecoration(labelText: 'Phone 1'),
+                    decoration: InputDecoration(
+                      labelText: 'Phone 1',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.phone,
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _phone2Controller,
-                    decoration: const InputDecoration(labelText: 'Phone 2'),
+                    decoration: InputDecoration(
+                      labelText: 'Phone 2 (Optional)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.phone,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _shopAddressController,
-                    decoration:
-                        const InputDecoration(labelText: 'Shop Address'),
+                    decoration: InputDecoration(
+                      labelText: 'Shop Address',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.location_on, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _shopNameController,
-                    decoration: const InputDecoration(labelText: 'Shop Name'),
+                    decoration: InputDecoration(
+                      labelText: 'Shop Name',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.store, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _advanceAmountController,
-                    decoration:
-                        const InputDecoration(labelText: 'Advance Amount'),
+                    decoration: InputDecoration(
+                      labelText: 'Advance Amount (₹)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.currency_rupee, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value!.isEmpty) return null;
-                      if (double.tryParse(value) == null)
-                        return 'Invalid number';
-                      return null;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty || double.tryParse(value) != null
+                            ? null
+                            : 'Invalid number',
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _pendingAmountController,
-                    decoration:
-                        const InputDecoration(labelText: 'Pending Amount'),
+                    decoration: InputDecoration(
+                      labelText: 'Pending Amount (₹)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.currency_rupee, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value!.isEmpty) return null;
-                      if (double.tryParse(value) == null)
-                        return 'Invalid number';
-                      return null;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty || double.tryParse(value) != null
+                            ? null
+                            : 'Invalid number',
                   ),
                 ],
               ),
@@ -106,7 +146,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () {
@@ -130,7 +170,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                   _clearForm();
                 }
               },
-              child: const Text('Add'),
+              child: const Text('Add', style: TextStyle(color: Colors.teal)),
             ),
           ],
         );
@@ -151,7 +191,10 @@ class _CustomerScreenState extends State<CustomerScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit Customer'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title:
+              const Text('Edit Customer', style: TextStyle(color: Colors.teal)),
           content: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -159,54 +202,91 @@ class _CustomerScreenState extends State<CustomerScreen> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.person, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _phone1Controller,
-                    decoration: const InputDecoration(labelText: 'Phone 1'),
+                    decoration: InputDecoration(
+                      labelText: 'Phone 1',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.phone,
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _phone2Controller,
-                    decoration: const InputDecoration(labelText: 'Phone 2'),
+                    decoration: InputDecoration(
+                      labelText: 'Phone 2 (Optional)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.phone,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _shopAddressController,
-                    decoration:
-                        const InputDecoration(labelText: 'Shop Address'),
+                    decoration: InputDecoration(
+                      labelText: 'Shop Address',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.location_on, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _shopNameController,
-                    decoration: const InputDecoration(labelText: 'Shop Name'),
+                    decoration: InputDecoration(
+                      labelText: 'Shop Name',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: const Icon(Icons.store, color: Colors.teal),
+                    ),
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _advanceAmountController,
-                    decoration:
-                        const InputDecoration(labelText: 'Advance Amount'),
+                    decoration: InputDecoration(
+                      labelText: 'Advance Amount (₹)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.currency_rupee, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value!.isEmpty) return null;
-                      if (double.tryParse(value) == null)
-                        return 'Invalid number';
-                      return null;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty || double.tryParse(value) != null
+                            ? null
+                            : 'Invalid number',
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _pendingAmountController,
-                    decoration:
-                        const InputDecoration(labelText: 'Pending Amount'),
+                    decoration: InputDecoration(
+                      labelText: 'Pending Amount (₹)',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      prefixIcon:
+                          const Icon(Icons.currency_rupee, color: Colors.teal),
+                    ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value!.isEmpty) return null;
-                      if (double.tryParse(value) == null)
-                        return 'Invalid number';
-                      return null;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty || double.tryParse(value) != null
+                            ? null
+                            : 'Invalid number',
                   ),
                 ],
               ),
@@ -215,7 +295,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () {
@@ -233,6 +313,8 @@ class _CustomerScreenState extends State<CustomerScreen> {
                     pendingAmount: _pendingAmountController.text.isEmpty
                         ? 0.0
                         : double.parse(_pendingAmountController.text),
+                    advanceLastUpdate: customer.advanceLastUpdate,
+                    pendingLastUpdate: customer.pendingLastUpdate,
                   );
                   Provider.of<CustomerViewModel>(context, listen: false)
                       .updateCustomer(customer.id!, updatedCustomer);
@@ -240,7 +322,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                   _clearForm();
                 }
               },
-              child: const Text('Update'),
+              child: const Text('Update', style: TextStyle(color: Colors.teal)),
             ),
           ],
         );
@@ -258,124 +340,180 @@ class _CustomerScreenState extends State<CustomerScreen> {
     _pendingAmountController.clear();
   }
 
-@override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Customers'),
-        centerTitle: true,
-      ),
-      body: Consumer<CustomerViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (viewModel.errorMessage != null) {
-            return Center(child: Text(viewModel.errorMessage!));
-          } else if (viewModel.customers.isEmpty) {
-            return const Center(child: Text('No customers available.'));
-          } else {
-            return ListView.builder(
-              itemCount: viewModel.customers.length,
-              itemBuilder: (context, index) {
-                final customer = viewModel.customers[index];
-                return Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Text("${customer.id} - ${customer.name}"),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Address: ${customer.shopAddress}'),
-                        Text(
-                            'Advance: ${customer.advanceAmount.toStringAsFixed(2)}'),
-                        Text(
-                            'Pending: ${customer.pendingAmount.toStringAsFixed(2)}'),
-                      ],
-                    ),
-                    onTap: () => _showCustomerDetailsDialog(customer),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _showEditCustomerDialog(customer),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Customer'),
-                                content: const Text(
-                                    'Are you sure you want to delete this customer?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Provider.of<CustomerViewModel>(context,
-                                              listen: false)
-                                          .deleteCustomer(customer.id!);
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          }
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddCustomerDialog,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-// New method to show full customer details
   void _showCustomerDetailsDialog(Customer customer) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Details - ${customer.name}'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('${customer.name} Details',
+              style: const TextStyle(color: Colors.teal)),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('ID: ${customer.id}'),
-                Text('Mobile No: ${customer.phone1}'),
-                Text('Phone No: ${customer.phone2}'),
-                Text('Shop: ${customer.shopName}'),
-                Text('Address: ${customer.shopAddress}'),
+                Text('ID: ${customer.id}',
+                    style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 8),
+                Text('Mobile: ${customer.phone1}',
+                    style: const TextStyle(fontSize: 14)),
+                if (customer.phone2.isNotEmpty)
+                  Text('Alternate: ${customer.phone2}',
+                      style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 8),
+                Text('Shop: ${customer.shopName}',
+                    style: const TextStyle(fontSize: 14)),
+                Text('Address: ${customer.shopAddress}',
+                    style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 12),
+                Text('Advance: ₹${customer.advanceAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 14, color: Colors.green)),
                 Text(
-                    'Advance Amount: ${customer.advanceAmount.toStringAsFixed(2)} - ${_formatTimestamp(customer.advanceLastUpdate)}'),
+                    'Last Updated: ${_formatTimestamp(customer.advanceLastUpdate)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 8),
+                Text('Pending: ₹${customer.pendingAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 14, color: Colors.red)),
                 Text(
-                    'Pending Amount: ${customer.pendingAmount.toStringAsFixed(2)} - ${_formatTimestamp(customer.pendingLastUpdate)}'),
+                    'Last Updated: ${_formatTimestamp(customer.pendingLastUpdate)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+              child: const Text('Close', style: TextStyle(color: Colors.teal)),
             ),
           ],
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Customers',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.teal,
+        centerTitle: true,
+        elevation: 4,
+      ),
+      body: SafeArea(
+        child: Consumer<CustomerViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (viewModel.errorMessage != null) {
+              return Center(
+                  child: Text(viewModel.errorMessage!,
+                      style: const TextStyle(color: Colors.red)));
+            } else if (viewModel.customers.isEmpty) {
+              return const Center(
+                  child: Text('No customers available.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)));
+            } else {
+              return ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: viewModel.customers.length,
+                itemBuilder: (context, index) {
+                  final customer = viewModel.customers[index];
+                  return Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    margin: const EdgeInsets.only(bottom: 8.0),
+                    child: ListTile(
+                      title: Text('${customer.name}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.teal)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text('Shop: ${customer.shopName}',
+                              style: const TextStyle(fontSize: 14)),
+                          Text('Address: ${customer.shopAddress}',
+                              style: const TextStyle(fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Column(
+                            children: [
+                              Text(
+                                  'Advance: ₹${customer.advanceAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.green)),
+                              const SizedBox(width: 16),
+                              Text(
+                                  'Pending: ₹${customer.pendingAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.red)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      onTap: () => _showCustomerDetailsDialog(customer),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.teal),
+                            tooltip: 'Edit',
+                            onPressed: () => _showEditCustomerDialog(customer),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: 'Delete',
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  title: const Text('Delete Customer',
+                                      style: TextStyle(color: Colors.teal)),
+                                  content: const Text(
+                                      'Are you sure you want to delete this customer?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel',
+                                          style: TextStyle(color: Colors.grey)),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Provider.of<CustomerViewModel>(context,
+                                                listen: false)
+                                            .deleteCustomer(customer.id!);
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Delete',
+                                          style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddCustomerDialog,
+        backgroundColor: Colors.teal,
+        tooltip: 'Add Customer',
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 

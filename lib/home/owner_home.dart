@@ -11,6 +11,7 @@ import 'package:kumar_brooms/viewmodels/order_viewmodel.dart';
 import 'package:kumar_brooms/viewmodels/item_viewmodel.dart';
 import 'package:provider/provider.dart';
 
+// OwnerHome widget remains unchanged
 class OwnerHome extends StatefulWidget {
   const OwnerHome({super.key});
 
@@ -38,8 +39,11 @@ class _OwnerHomeState extends State<OwnerHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: body[_currentIndex],
+      body: SafeArea(
+        // Add SafeArea here
+        child: Center(
+          child: body[_currentIndex],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -49,6 +53,10 @@ class _OwnerHomeState extends State<OwnerHome> {
           });
         },
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        elevation: 10,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
@@ -206,7 +214,6 @@ class _HomeState extends State<Home> {
                   customerVM.errorMessage!));
         }
 
-        // Data for Orders by Stage Bar Chart
         final ordersByStage = [
           orderVM.trackingOrders.length,
           orderVM.workOrders.length,
@@ -215,21 +222,6 @@ class _HomeState extends State<Home> {
           orderVM.historyOrders.length,
         ];
 
-        // Data for Completed vs Incomplete Pie Chart
-        int totalOrdered = 0;
-        int totalCompleted = 0;
-        for (var order in orderVM.historyOrdersList) {
-          for (var item in order.items.entries) {
-            totalOrdered += item.value[0];
-            totalCompleted += item.value[1];
-          }
-        }
-        final totalIncomplete = totalOrdered - totalCompleted;
-
-        // Data for Average Days Bar Chart
-        final avgDays = _calculateAverageDays(orderVM.historyOrdersList);
-
-        // Data for Customer-specific Item-wise Count Bar Chart
         final customerItemCounts = _calculateItemWiseCount(
             orderVM.historyOrdersList, itemVM,
             customerId: _selectedCustomerId);
@@ -237,7 +229,6 @@ class _HomeState extends State<Home> {
         final customerItemValues =
             customerItemCounts.values.map((count) => count.toDouble()).toList();
 
-        // Data for Total Earned and Total Weight
         final totalEarned =
             _calculateTotalEarned(orderVM.historyOrdersList, itemVM);
         final totalWeight =
@@ -248,316 +239,346 @@ class _HomeState extends State<Home> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Orders by Stage',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 250,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    barGroups: [
-                      BarChartGroupData(x: 0, barRods: [
-                        BarChartRodData(
-                            toY: ordersByStage[0].toDouble(),
-                            color: Colors.blue)
-                      ]),
-                      BarChartGroupData(x: 1, barRods: [
-                        BarChartRodData(
-                            toY: ordersByStage[1].toDouble(),
-                            color: Colors.green)
-                      ]),
-                      BarChartGroupData(x: 2, barRods: [
-                        BarChartRodData(
-                            toY: ordersByStage[2].toDouble(),
-                            color: Colors.orange)
-                      ]),
-                      BarChartGroupData(x: 3, barRods: [
-                        BarChartRodData(
-                            toY: ordersByStage[3].toDouble(),
-                            color: Colors.purple)
-                      ]),
-                      BarChartGroupData(x: 4, barRods: [
-                        BarChartRodData(
-                            toY: ordersByStage[4].toDouble(), color: Colors.red)
-                      ]),
-                    ],
-                    titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(
-                          sideTitles:
-                              SideTitles(showTitles: true, reservedSize: 40)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 60,
-                          getTitlesWidget: (value, meta) {
-                            const titles = [
-                              'Order',
-                              'Work',
-                              'Delivery',
-                              'Payment',
-                              'History'
-                            ];
-                            return Transform.rotate(
-                              angle: -45 * 3.14159 / 180,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(titles[value.toInt()],
-                                    style: const TextStyle(fontSize: 12)),
-                              ),
-                            );
-                          },
+              // Orders by Stage Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Orders by Stage',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
                         ),
                       ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 250,
+                        child: BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups: [
+                              BarChartGroupData(x: 0, barRods: [
+                                BarChartRodData(
+                                    toY: ordersByStage[0].toDouble(),
+                                    color: Colors.blue,
+                                    width: 20)
+                              ]),
+                              BarChartGroupData(x: 1, barRods: [
+                                BarChartRodData(
+                                    toY: ordersByStage[1].toDouble(),
+                                    color: Colors.green,
+                                    width: 20)
+                              ]),
+                              BarChartGroupData(x: 2, barRods: [
+                                BarChartRodData(
+                                    toY: ordersByStage[2].toDouble(),
+                                    color: Colors.orange,
+                                    width: 20)
+                              ]),
+                              BarChartGroupData(x: 3, barRods: [
+                                BarChartRodData(
+                                    toY: ordersByStage[3].toDouble(),
+                                    color: Colors.purple,
+                                    width: 20)
+                              ]),
+                              BarChartGroupData(x: 4, barRods: [
+                                BarChartRodData(
+                                    toY: ordersByStage[4].toDouble(),
+                                    color: Colors.red,
+                                    width: 20)
+                              ]),
+                            ],
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 60,
+                                  getTitlesWidget: (value, meta) {
+                                    const titles = [
+                                      'Order',
+                                      'Work',
+                                      'Delivery',
+                                      'Payment',
+                                      'History'
+                                    ];
+                                    return Transform.rotate(
+                                      angle: -45 * 3.14159 / 180,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 8.0),
+                                        child: Text(titles[value.toInt()],
+                                            style:
+                                                const TextStyle(fontSize: 12)),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                            gridData: const FlGridData(show: false),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-              // const Text('Completed vs Incomplete Items',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // const SizedBox(height: 16),
-              // SizedBox(
-              //   height: 200,
-              //   child: PieChart(
-              //     PieChartData(
-              //       sections: [
-              //         PieChartSectionData(
-              //           value: totalCompleted.toDouble(),
-              //           color: Colors.green,
-              //           title: 'Completed\n$totalCompleted',
-              //           radius: 50,
-              //           titleStyle:
-              //               const TextStyle(fontSize: 12, color: Colors.white),
-              //         ),
-              //         PieChartSectionData(
-              //           value: totalIncomplete.toDouble(),
-              //           color: Colors.red,
-              //           title: 'Incomplete\n$totalIncomplete',
-              //           radius: 50,
-              //           titleStyle:
-              //               const TextStyle(fontSize: 12, color: Colors.white),
-              //         ),
-              //       ],
-              //       centerSpaceRadius: 40,
-              //       sectionsSpace: 2,
-              //     ),
-              //   ),
-              // ),
-              // const SizedBox(height: 32),
-              // const Text('Average Days per Stage Transition',
-              //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              // const SizedBox(height: 16),
-              // SizedBox(
-              //   height: 250,
-              //   child: BarChart(
-              //     BarChartData(
-              //       alignment: BarChartAlignment.spaceAround,
-              //       barGroups: [
-              //         BarChartGroupData(x: 0, barRods: [
-              //           BarChartRodData(toY: avgDays[0], color: Colors.blue)
-              //         ]),
-              //         BarChartGroupData(x: 1, barRods: [
-              //           BarChartRodData(toY: avgDays[1], color: Colors.green)
-              //         ]),
-              //         BarChartGroupData(x: 2, barRods: [
-              //           BarChartRodData(toY: avgDays[2], color: Colors.orange)
-              //         ]),
-              //         BarChartGroupData(x: 3, barRods: [
-              //           BarChartRodData(toY: avgDays[3], color: Colors.purple)
-              //         ]),
-              //       ],
-              //       titlesData: FlTitlesData(
-              //         leftTitles: const AxisTitles(
-              //             sideTitles:
-              //                 SideTitles(showTitles: true, reservedSize: 40)),
-              //         bottomTitles: AxisTitles(
-              //           sideTitles: SideTitles(
-              //             showTitles: true,
-              //             reservedSize: 60,
-              //             getTitlesWidget: (value, meta) {
-              //               const titles = [
-              //                 'Order->Work',
-              //                 'Work->Delivery',
-              //                 'Delivery->Payment',
-              //                 'Payment->History'
-              //               ];
-              //               return Transform.rotate(
-              //                 angle: -45 * 3.14159 / 180,
-              //                 child: Padding(
-              //                   padding: const EdgeInsets.only(top: 8.0),
-              //                   child: Text(titles[value.toInt()],
-              //                       style: const TextStyle(fontSize: 12)),
-              //                 ),
-              //               );
-              //             },
-              //           ),
-              //         ),
-              //       ),
-              //       borderData: FlBorderData(show: false),
-              //       gridData: const FlGridData(show: false),
-              //     ),
-              //   ),
-              // ),
-              const SizedBox(height: 32),
-              const Text('Customer Item Purchases',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Autocomplete<String>(
-                  optionsBuilder: (TextEditingValue textEditingValue) {
-                    final allNames =
-                        customerVM.customers.map((customer) => customer.name);
-                    if (textEditingValue.text.isEmpty) {
-                      return allNames; // Show all customer names when empty
-                    }
-                    return allNames.where((name) => name
-                        .toLowerCase()
-                        .contains(textEditingValue.text.toLowerCase()));
-                  },
-                  fieldViewBuilder:
-                      (context, controller, focusNode, onFieldSubmitted) {
-                    return TextField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        labelText: 'Search Customer',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
+
+              const SizedBox(height: 24),
+
+              // Customer Item Purchases Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Customer Item Purchases',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Autocomplete<String>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            final allNames = customerVM.customers
+                                .map((customer) => customer.name);
+                            if (textEditingValue.text.isEmpty) {
+                              return allNames;
+                            }
+                            return allNames.where((name) => name
+                                .toLowerCase()
+                                .contains(textEditingValue.text.toLowerCase()));
+                          },
+                          fieldViewBuilder: (context, controller, focusNode,
+                              onFieldSubmitted) {
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: 'Search Customer',
+                                border: InputBorder.none,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.clear, size: 20),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedCustomerId = null;
+                                      controller.clear();
+                                    });
+                                  },
+                                ),
+                              ),
+                              onSubmitted: (value) => onFieldSubmitted(),
+                            );
+                          },
+                          onSelected: (String customerName) {
+                            final selectedCustomer = customerVM.customers
+                                .firstWhere((customer) =>
+                                    customer.name == customerName);
                             setState(() {
-                              _selectedCustomerId = null;
-                              controller.clear();
+                              _selectedCustomerId = selectedCustomer.id;
                             });
                           },
                         ),
                       ),
-                      onSubmitted: (value) => onFieldSubmitted(),
-                    );
-                  },
-                  onSelected: (String customerName) {
-                    final selectedCustomer = customerVM.customers.firstWhere(
-                      (customer) => customer.name == customerName,
-                      orElse: () => customerVM
-                          .customers.first, // Fallback, should not happen
-                    );
-                    setState(() {
-                      _selectedCustomerId = selectedCustomer.id;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 300,
-                child: customerItemCounts.isEmpty
-                    ? const Center(
-                        child: Text('No items purchased by this customer'))
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: customerItemNames.length * 60.0,
-                          child: BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              barGroups: List.generate(
-                                customerItemNames.length,
-                                (index) => BarChartGroupData(
-                                  x: index,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: customerItemValues[index],
-                                      color: Colors.teal,
-                                    ),
-                                  ],
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 300,
+                        child: customerItemCounts.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No items purchased by this customer',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.grey),
                                 ),
-                              ),
-                              titlesData: FlTitlesData(
-                                leftTitles: const AxisTitles(
-                                    sideTitles: SideTitles(
-                                        showTitles: true, reservedSize: 40)),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 60,
-                                    getTitlesWidget: (value, meta) {
-                                      final index = value.toInt();
-                                      if (index >= 0 &&
-                                          index < customerItemNames.length) {
-                                        return Transform.rotate(
-                                          angle: -45 * 3.14159 / 180,
-                                          child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 8.0),
-                                            child: Text(
-                                              customerItemNames[index],
-                                              style:
-                                                  const TextStyle(fontSize: 12),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
+                              )
+                            : SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: customerItemNames.length * 80.0,
+                                  child: BarChart(
+                                    BarChartData(
+                                      alignment: BarChartAlignment.spaceAround,
+                                      barGroups: List.generate(
+                                        customerItemNames.length,
+                                        (index) => BarChartGroupData(
+                                          x: index,
+                                          barRods: [
+                                            BarChartRodData(
+                                              toY: customerItemValues[index],
+                                              color: Colors.blue,
+                                              width: 20,
                                             ),
+                                          ],
+                                        ),
+                                      ),
+                                      titlesData: FlTitlesData(
+                                        leftTitles: const AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false)),
+                                        rightTitles: const AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false)),
+                                        topTitles: const AxisTitles(
+                                            sideTitles:
+                                                SideTitles(showTitles: false)),
+                                        bottomTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            reservedSize: 60,
+                                            getTitlesWidget: (value, meta) {
+                                              final index = value.toInt();
+                                              if (index >= 0 &&
+                                                  index <
+                                                      customerItemNames
+                                                          .length) {
+                                                return Transform.rotate(
+                                                  angle: -45 * 3.14159 / 180,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 8.0),
+                                                    child: Text(
+                                                      customerItemNames[index],
+                                                      style: const TextStyle(
+                                                          fontSize: 12),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                              return const Text('');
+                                            },
                                           ),
-                                        );
-                                      }
-                                      return const Text('');
-                                    },
+                                        ),
+                                      ),
+                                      borderData: FlBorderData(show: false),
+                                      gridData: const FlGridData(show: false),
+                                    ),
                                   ),
                                 ),
                               ),
-                              borderData: FlBorderData(show: false),
-                              gridData: const FlGridData(show: false),
-                            ),
-                          ),
-                        ),
                       ),
-              ),
-              const SizedBox(height: 32),
-              const Text('Total Company Earnings and Weight Sold',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 200,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    barGroups: [
-                      BarChartGroupData(x: 0, barRods: [
-                        BarChartRodData(
-                            toY: totalEarned, color: Colors.green, width: 20)
-                      ]),
-                      BarChartGroupData(x: 1, barRods: [
-                        BarChartRodData(
-                            toY: totalWeight, color: Colors.blue, width: 20)
-                      ]),
                     ],
-                    titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(
-                          sideTitles:
-                              SideTitles(showTitles: true, reservedSize: 40)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            const titles = ['Earnings (\rs )', 'Weight (kg)'];
-                            return Text(titles[value.toInt()],
-                                style: const TextStyle(fontSize: 12));
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
                   ),
                 ),
               ),
-              Text('Total Earned: rs ${totalEarned.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 16)),
-              Text('Total Weight Sold: ${totalWeight.toStringAsFixed(2)} kg',
-                  style: const TextStyle(fontSize: 16)),
+
+              const SizedBox(height: 24),
+
+              // Total Earnings and Weight Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Total Company Earnings & Weight Sold',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 200,
+                        child: BarChart(
+                          BarChartData(
+                            alignment: BarChartAlignment.spaceAround,
+                            barGroups: [
+                              BarChartGroupData(x: 0, barRods: [
+                                BarChartRodData(
+                                    toY: totalEarned,
+                                    color: Colors.green,
+                                    width: 30)
+                              ]),
+                              BarChartGroupData(x: 1, barRods: [
+                                BarChartRodData(
+                                    toY: totalWeight,
+                                    color: Colors.blue,
+                                    width: 30)
+                              ]),
+                            ],
+                            titlesData: FlTitlesData(
+                              leftTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false)),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    const titles = [
+                                      'Earnings (₹)',
+                                      'Weight (kg)'
+                                    ];
+                                    return Text(titles[value.toInt()],
+                                        style: const TextStyle(fontSize: 14));
+                                  },
+                                ),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                            gridData: const FlGridData(show: false),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total Earned: ₹${totalEarned.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.green),
+                          ),
+                          Text(
+                            'Weight Sold: ${totalWeight.toStringAsFixed(2)} kg',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.blue),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );

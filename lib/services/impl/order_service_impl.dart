@@ -324,4 +324,27 @@ class OrderServiceImpl implements OrderService {
       return [];
     }
   }
+  
+  @override
+Future<void> moveOrderToPaymentFromHistory(String orderId, int priority) async {
+  try {
+    // Remove from tracking/history
+    await _firestore.collection(_trackingCollection).doc('history').update({
+      orderId: FieldValue.delete(),
+    });
+    // Add to tracking/payment with priority
+    await _firestore.collection(_trackingCollection).doc('payment').set(
+      {orderId: priority},
+      SetOptions(merge: true),
+    );
+    // Update timestamp in orders collection
+    await _firestore.collection(_ordersCollection).doc(orderId).update({
+      'time_stamp.history_started': FieldValue.delete(),
+      'time_stamp.payment_started': FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    print('Error moving order to payment from history: $e');
+    rethrow;
+  }
+}
 }

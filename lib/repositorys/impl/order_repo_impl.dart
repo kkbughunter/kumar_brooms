@@ -97,4 +97,9 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<List<MapEntry<String, int>>> getHistoryOrders() async {
     return await _orderService.getHistoryOrders();
   }
+  
+  @override
+Future<void> moveOrderToPaymentFromHistory(String orderId, int priority) async {
+  await _orderService.moveOrderToPaymentFromHistory(orderId, priority);
+}
 }

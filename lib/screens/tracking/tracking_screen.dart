@@ -16,13 +16,13 @@ class _TrackingState extends State<Tracking>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // List of tabs and corresponding screens
-  final List<String> _tabs = [
-    'Order',
-    'Work',
-    'Delivery',
-    'Payment',
-    'History',
+  // List of tabs and corresponding screens with icons
+  final List<Map<String, dynamic>> _tabs = [
+    {'title': 'Order', 'icon': Icons.shopping_cart},
+    {'title': 'Work', 'icon': Icons.build},
+    {'title': 'Delivery', 'icon': Icons.local_shipping},
+    {'title': 'Payment', 'icon': Icons.payment},
+    {'title': 'History', 'icon': Icons.history},
   ];
   final List<Widget> _screens = [
     const OrderScreen(),
@@ -48,17 +48,45 @@ class _TrackingState extends State<Tracking>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tracking'),
+        title: const Text(
+          'Tracking',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true, // Allows scrolling if tabs exceed width
-          tabs: _tabs.map((String tab) => Tab(text: tab)).toList(),
+          isScrollable: true,
+          indicatorColor: Colors.blue[900],
+          indicatorWeight: 3,
+          labelColor: Colors.blue[900],
+          unselectedLabelColor: Colors.blue,
+          labelStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          tabs: _tabs
+              .map((tab) => Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(tab['icon'], size: 20),
+                        const SizedBox(width: 8),
+                        Text(tab['title']),
+                      ],
+                    ),
+                  ))
+              .toList(),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _screens,
+      body: SafeArea(
+        child: TabBarView(
+          controller: _tabController,
+          children: _screens,
+        ),
       ),
+      
     );
   }
 }

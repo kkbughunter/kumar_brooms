@@ -1,5 +1,3 @@
-// lib/screens/tracking/work/work_screen.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kumar_brooms/models/item.dart';
 import 'package:kumar_brooms/models/order.dart';
@@ -36,37 +34,50 @@ class _WorkScreenState extends State<WorkScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Update Completed Pieces'),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Text('Update Completed Pieces',
+                  style: TextStyle(color: Colors.teal)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ordered: $currentOrdered'),
+                  Text('Ordered: $currentOrdered',
+                      style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 12),
                   Slider(
                     value: newDone,
                     min: 0,
                     max: currentOrdered.toDouble(),
                     divisions: currentOrdered,
                     label: newDone.round().toString(),
+                    activeColor: Colors.teal,
                     onChanged: (value) {
                       setState(() {
                         newDone = value;
                       });
                     },
                   ),
-                  Text('Completed: ${newDone.round()}'),
+                  Text('Completed: ${newDone.round()}',
+                      style: const TextStyle(fontSize: 16)),
                 ],
               ),
               actions: [
                 TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
                   onPressed: () {
                     if (newDone.round() != currentDone) {
-                      // Save if changed
                       updatedItems[itemId] = [currentOrdered, newDone.round()];
                       orderVM.updateOrderItems(order.id!, updatedItems);
                     }
                     Navigator.pop(context);
                   },
-                  child: const Text('Close'),
+                  child:
+                      const Text('Save', style: TextStyle(color: Colors.teal)),
                 ),
               ],
             );
@@ -79,112 +90,142 @@ class _WorkScreenState extends State<WorkScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer2<OrderViewModel, ItemViewModel>(
-        builder: (context, orderVM, itemVM, child) {
-          if (orderVM.isLoading || itemVM.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (orderVM.errorMessage != null) {
-            return Center(child: Text(orderVM.errorMessage!));
-          } else if (orderVM.workOrdersList.isEmpty) {
-            return const Center(child: Text('No work orders available.'));
-          } else {
-            return ListView.builder(
-              itemCount: orderVM.workOrdersList.length,
-              itemBuilder: (context, index) {
-                final order = orderVM.workOrdersList[index];
-                final customer = orderVM.customers.firstWhere(
-                  (c) => c['id'] == order.customerId,
-                  orElse: () => {'id': order.customerId, 'name': 'Unknown'},
-                );
-                final isFullyCompleted = order.items.entries.every(
-                  (e) => e.value[1] >= e.value[0],
-                );
+      body: SafeArea(
+        child: Consumer2<OrderViewModel, ItemViewModel>(
+          builder: (context, orderVM, itemVM, child) {
+            if (orderVM.isLoading || itemVM.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (orderVM.errorMessage != null) {
+              return Center(
+                  child: Text(orderVM.errorMessage!,
+                      style: const TextStyle(color: Colors.red)));
+            } else if (orderVM.workOrdersList.isEmpty) {
+              return const Center(
+                  child: Text('No work orders available.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)));
+            } else {
+              return ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: orderVM.workOrdersList.length,
+                itemBuilder: (context, index) {
+                  final order = orderVM.workOrdersList[index];
+                  final customer = orderVM.customers.firstWhere(
+                    (c) => c['id'] == order.customerId,
+                    orElse: () => {'id': order.customerId, 'name': 'Unknown'},
+                  );
+                  final isFullyCompleted = order.items.entries.every(
+                    (e) => e.value[1] >= e.value[0],
+                  );
 
-                return Card(
-                  margin: const EdgeInsets.all(8.0),
-                  color: isFullyCompleted ? Colors.lightGreen[100] : null,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Customer: ${customer['name']}'),
-                        const SizedBox(height: 8),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('Name')),
-                              DataColumn(label: Text('Length')),
-                              DataColumn(label: Text('Weight')),
-                              DataColumn(label: Text('Ordered')),
-                              DataColumn(label: Text('Done')),
-                            ],
-                            rows: order.items.entries.map((e) {
-                              final item = itemVM.items.firstWhere(
-                                (i) => i.id == e.key,
-                                orElse: () => Item(
-                                  itemFor: '',
-                                  length: 'N/A',
-                                  name: e.key,
-                                  price: 0.0,
-                                  weight: 0,
-                                ),
-                              );
-                              return DataRow(cells: [
-                                DataCell(Text(item.name)),
-                                DataCell(Text(item.length)),
-                                DataCell(Text(item.weight.toString())),
-                                DataCell(Text(e.value[0].toString())),
-                                DataCell(
-                                  GestureDetector(
-                                    onTap: () => _showEditCompletedDialog(
-                                      context,
-                                      order,
-                                      e.key,
-                                      e.value[0],
-                                      e.value[1],
-                                    ),
-                                    child: Text(
-                                      e.value[1].toString(),
-                                      style: const TextStyle(
-                                          color: Colors.blue,
-                                          decoration: TextDecoration.underline),
+                  return Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    color: isFullyCompleted ? Colors.green[50] : Colors.white,
+                    margin: const EdgeInsets.only(bottom: 8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          
+                          Text('${customer['name']}',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columnSpacing: 16,
+                              columns: const [
+                                DataColumn(
+                                    label: Text('Item',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Length',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Weight',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Ordered',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Done',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ],
+                              rows: order.items.entries.map((e) {
+                                final item = itemVM.items.firstWhere(
+                                  (i) => i.id == e.key,
+                                  orElse: () => Item(
+                                      itemFor: '',
+                                      length: 'N/A',
+                                      name: e.key,
+                                      price: 0.0,
+                                      weight: 0),
+                                );
+                                return DataRow(cells: [
+                                  DataCell(Text(item.name)),
+                                  DataCell(Text(item.length)),
+                                  DataCell(Text('${item.weight}g')),
+                                  DataCell(Text(e.value[0].toString())),
+                                  DataCell(
+                                    GestureDetector(
+                                      onTap: () => _showEditCompletedDialog(
+                                          context,
+                                          order,
+                                          e.key,
+                                          e.value[0],
+                                          e.value[1]),
+                                      child: Text(
+                                        e.value[1].toString(),
+                                        style: const TextStyle(
+                                            color: Colors.teal,
+                                            decoration:
+                                                TextDecoration.underline),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ]);
-                            }).toList(),
+                                ]);
+                              }).toList(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              tooltip: 'Move to Order',
-                              onPressed: () {
-                                orderVM.moveOrderToOrder(order.id!);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.arrow_forward),
-                              tooltip: 'Move to Delivery',
-                              onPressed: () {
-                                orderVM.moveOrderToDelivery(order.id!);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back,
+                                    color: Colors.teal),
+                                tooltip: 'Move to Order',
+                                onPressed: () {
+                                  orderVM.moveOrderToOrder(order.id!);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward,
+                                    color: Colors.teal),
+                                tooltip: 'Move to Delivery',
+                                onPressed: () {
+                                  orderVM.moveOrderToDelivery(order.id!);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-          }
-        },
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
     );
   }

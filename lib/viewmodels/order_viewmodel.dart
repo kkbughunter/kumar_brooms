@@ -313,4 +313,17 @@ class OrderViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+  
+  Future<void> moveOrderToPaymentFromHistory(String orderId) async {
+  _isLoading = true;
+  notifyListeners();
+  try {
+    await _orderRepository.moveOrderToPaymentFromHistory(orderId, 1);
+    await fetchHistoryOrders(); // Refresh history orders
+  } catch (e) {
+    _errorMessage = 'Failed to move order to payment: $e';
+    _isLoading = false;
+    notifyListeners();
+  }
+}
 }

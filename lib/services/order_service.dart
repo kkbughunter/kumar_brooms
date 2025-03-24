@@ -20,4 +20,5 @@ abstract class OrderService {
   Future<void> moveOrderToPayment(String orderId, int priority);
   Future<void> moveOrderToDeliveryFromPayment(String orderId, int priority);
   Future<void> moveOrderToHistory(String orderId, int priority);
+  Future<void> moveOrderToPaymentFromHistory(String orderId, int priority);
 }
